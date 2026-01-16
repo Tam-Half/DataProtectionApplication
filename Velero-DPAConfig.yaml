@@ -1,0 +1,93 @@
+ apiVersion: oadp.openshift.io/v1alpha1
+ kind: DataProtectionApplication
+ metadata:
+   name: app-backup # Can be changed to any name
+   namespace: openshift-adp
+ spec:
+   backupImages: false
+   configuration:
+     nodeAgent:
+       enable: true
+       uploaderType: kopia
+     velero:
+       defaultPlugins:
+         - aws
+         - openshift 
+        # - csi don't need csi 
+   backupLocations:
+     - name: app-backup-1 
+       velero:
+         config:
+           profile: "default"
+           region: REGION # In case of minio, use minio
+           s3Url: ENDPOINT # In case of Minio, http://minio.minio.svc.cluster.local:80 or IP (http://<IP_ADDRESS>:9000)
+           insecureSkipTLSVerify: "true"
+           s3ForcePathStyle: "true"
+         provider: aws
+         default: true
+         credential:
+           key: cloud
+           name: cloud-credentials # First generated secret name
+         objectStorage:
+           bucket: S3_BUCKET # chanege to your bucket name
+          # prefix: todo # 
+     - name: app-backup-2
+       velero:
+           config:
+             profile: "default"
+             region: REGION # In case of minio, use minio
+             s3Url: ENDPOINT # In case of Minio, http://minio.minio.svc.cluster.local:80 or IP (http://<IP_ADDRESS>:9000)
+             insecureSkipTLSVerify: "true"
+             s3ForcePathStyle: "true"
+           provider: aws
+           default: false
+           credential:
+             key: cloud
+             name: cloud-credentials # First generated secret name
+           objectStorage:
+             bucket: S3_BUCKET # chanege to your bucket name
+            # prefix: todo # 
+
+## When you use 
+# First check backup-location 
+# velero backup-location get 
+
+# Secondary backup location
+# velero backup create backup-to-bucket-2 \
+#  --include-namespaces <namespace-to-backup> \
+#  --storage-location <name-of-secondary-backup-location> 
+
+
+
+
+#  apiVersion: oadp.openshift.io/v1alpha1
+#  kind: DataProtectionApplication
+#  metadata:
+#    name: app-backup
+#    namespace: openshift-adp
+#  spec:
+#    backupImages: false
+#    configuration:
+#      velero:
+#        defaultPlugins:
+#          - aws
+#          - openshift 
+#      restic:
+#        enable: true # If you don't have CSI then you need to enable restic
+#    backupLocations:
+#      - velero:
+#          config:
+#            profile: "default"
+#            region: REGION # In case of minio, use minio
+#            # In case of Minio, http://minio.minio.svc.cluster.local:80
+#            s3Url: ENDPOINT 
+#            insecureSkipTLSVerify: "true"
+#            s3ForcePathStyle: "true"
+#          provider: aws
+#          default: true
+#          credential:
+#            key: cloud
+#            name: cloud-credentials # Default. Can be removed 
+#          objectStorage:
+#            bucket: S3_BUCKET
+#            prefix: todo # Optional
